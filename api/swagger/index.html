@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My API Docs</title>
+  <link rel="stylesheet" href="./swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="./swagger-ui-bundle.js"></script>
+  <script>
+    window.onload = () => {
+      window.ui = SwaggerUIBundle({
+        url: "/spec/swagger.yaml",
+        dom_id: '#swagger-ui',
+      });
+    };
+  </script>
+</body>
+</html>

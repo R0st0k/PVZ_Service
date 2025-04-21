@@ -1,0 +1,41 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: pvz_service
+    ports:
+      - "8080:8080"
+    environment:
+      - CONFIG_PATH=/config/prod.yaml
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - backend
+
+
+  db:
+    image: postgres:15-alpine
+    container_name: pvz_service_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=pvz
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pvz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - backend
+
+networks:
+  backend:
+volumes:
+  postgres_data:

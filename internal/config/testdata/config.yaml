@@ -1,0 +1,32 @@
+http:
+  host: "0.0.0.0"
+  port: "8080"
+  timeout: "4s"
+  idle_timeout: "30s"
+
+grpc:
+  is_able: true
+  host: "0.0.0.0"
+  port: "3000"
+  timeout: "4s"
+  idle_timeout: "30s"
+
+prometheus:
+  is_able: true
+  host: "0.0.0.0"
+  port: "3000"
+  timeout: "4s"
+  idle_timeout: "30s"
+
+database:
+  protocol: "postgres"
+  host: "db"
+  port: "5432"
+  user: "postgres"
+  password: "postgres"
+  name: "pvz"
+  sslmode: "disable"
+
+jwt:
+  secret: "secret"
+  expires_in: "24h"
