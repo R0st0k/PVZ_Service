@@ -6,14 +6,13 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"os/signal"
 	"pvz-service/internal/config"
 	"pvz-service/internal/logger/sl"
-	"syscall"
+	"sync"
 	"time"
 )
 
-func StartHTTPServer(cfg *config.Config, log *slog.Logger, router *http.Handler) {
+func StartHTTPServer(cfg *config.Config, log *slog.Logger, router *http.Handler) func(*sync.WaitGroup) {
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%s", cfg.HTTP.Host, cfg.HTTP.Port),
 		Handler:      *router,
@@ -31,19 +30,19 @@ func StartHTTPServer(cfg *config.Config, log *slog.Logger, router *http.Handler)
 		}
 	}()
 
-	// Terminate
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	<-stop
+	// Graceful Stop
+	return func(wg *sync.WaitGroup) {
+		defer wg.Done()
 
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer shutdownCancel()
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer shutdownCancel()
 
-	// Shutdown server
-	log.Info("Shutting down HTTP server")
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Error("HTTP server shutdown error", sl.Err(err))
-	} else {
-		log.Info("HTTP server gracefully stopped")
+		// Shutdown server
+		log.Info("Shutting down HTTP server")
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			log.Error("HTTP server shutdown error", sl.Err(err))
+		} else {
+			log.Info("HTTP server gracefully stopped")
+		}
 	}
 }

@@ -22,8 +22,6 @@ func TestConfigDefaults(t *testing.T) {
 	assert.Equal(t, false, cfg.GRPC.IsAble)
 	assert.Equal(t, "", cfg.GRPC.Host)
 	assert.Equal(t, "", cfg.GRPC.Port)
-	assert.Equal(t, time.Duration(0), cfg.GRPC.Timeout)
-	assert.Equal(t, time.Duration(0), cfg.GRPC.IdleTimeout)
 
 	assert.Equal(t, false, cfg.Prometheus.IsAble)
 	assert.Equal(t, "", cfg.Prometheus.Host)

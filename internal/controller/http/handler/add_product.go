@@ -82,6 +82,7 @@ func (h *Handler) AddProduct() http.HandlerFunc {
 			return
 		}
 
+		h.metrics.ProductsAdded.Inc()
 		w.WriteHeader(http.StatusCreated)
 		render.JSON(w, r, product)
 	}

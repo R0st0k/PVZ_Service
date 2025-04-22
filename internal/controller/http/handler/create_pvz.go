@@ -85,6 +85,7 @@ func (h *Handler) CreatePVZ() http.HandlerFunc {
 			return
 		}
 
+		h.metrics.PVZCreated.Inc()
 		w.WriteHeader(http.StatusCreated)
 		render.JSON(w, r, resp)
 	}

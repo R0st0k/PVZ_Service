@@ -89,6 +89,15 @@ func (m *MockPVZRepository) GetPVZs(ctx context.Context, from, to time.Time, lim
 	return args.Get(0).([]models.PVZ), args.Error(1)
 }
 
+func (m *MockPVZRepository) GetPVZsWithNoFilter(ctx context.Context) ([]models.PVZ, error) {
+	args := m.Called(ctx)
+	list := args.Get(0)
+	if list == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.PVZ), args.Error(1)
+}
+
 func (m *MockPVZRepository) GetReceptionsForPVZs(ctx context.Context, pvzIDs []uuid.UUID, from, to time.Time) ([]models.Reception, error) {
 	args := m.Called(ctx, pvzIDs, from, to)
 	return args.Get(0).([]models.Reception), args.Error(1)
@@ -588,6 +597,76 @@ func TestPVZService_GetPVZsWithReceptions(t *testing.T) {
 					product := receptionInfo.Products[0]
 					assert.Equal(t, testProduct.ID, product.ID)
 					assert.Equal(t, testProduct.TypeName, product.TypeName)
+				}
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestPVZService_GetPVZs(t *testing.T) {
+	now := time.Now()
+	testPVZ := models.PVZ{
+		ID:               uuid.New(),
+		RegistrationDate: now,
+		CityName:         "Москва",
+		CityID:           1,
+	}
+
+	tests := []struct {
+		name          string
+		mockSetup     func(*MockPVZRepository)
+		expectError   error
+		expectResults int
+	}{
+		{
+			name: "Success with results",
+			mockSetup: func(m *MockPVZRepository) {
+				m.On("GetPVZsWithNoFilter", mock.Anything).Return([]models.PVZ{testPVZ}, nil)
+			},
+			expectError:   nil,
+			expectResults: 1,
+		},
+		{
+			name: "No results",
+			mockSetup: func(m *MockPVZRepository) {
+				m.On("GetPVZsWithNoFilter", mock.Anything).Return([]models.PVZ{}, nil)
+			},
+			expectError:   nil,
+			expectResults: 0,
+		},
+		{
+			name: "Repository error",
+			mockSetup: func(m *MockPVZRepository) {
+				m.On("GetPVZsWithNoFilter", mock.Anything).Return(nil, errors.New("repository error"))
+			},
+			expectError:   errors.New("failed to get PVZs: repository error"),
+			expectResults: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(MockPVZRepository)
+			tt.mockSetup(mockRepo)
+
+			service := NewPVZService(mockRepo, slog.Default())
+			result, err := service.GetPVZs(context.Background())
+
+			if tt.expectError != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tt.expectError.Error(), err.Error())
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.Equal(t, tt.expectResults, len(result))
+
+				if tt.expectResults > 0 {
+					assert.Equal(t, testPVZ.ID, result[0].ID)
+					assert.Equal(t, testPVZ.CityName, result[0].CityName)
+					assert.Equal(t, testPVZ.RegistrationDate, result[0].RegistrationDate)
 				}
 			}
 

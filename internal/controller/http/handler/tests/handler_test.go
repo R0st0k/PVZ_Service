@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"pvz-service/internal/controller/http/handler"
+	"pvz-service/internal/metrics"
 	"pvz-service/internal/models"
+	"sync"
 	"testing"
 	"time"
 
@@ -17,6 +19,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
+)
+
+var (
+	metricsOnce sync.Once
+	testMetrics *metrics.Metrics
 )
 
 type MockAuthService struct {
@@ -82,12 +89,20 @@ func (m *MockPVZService) GetPVZsWithReceptions(ctx context.Context, from, to tim
 	return args.Get(0).([]models.PVZInfo), args.Error(1)
 }
 
+func (m *MockPVZService) GetPVZs(ctx context.Context) ([]models.PVZ, error) {
+	args := m.Called(ctx)
+	return args.Get(0).([]models.PVZ), args.Error(1)
+}
+
 func setupHandler(t *testing.T) (*MockAuthService, *MockPVZService, *handler.Handler) {
 	t.Helper()
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	metricsOnce.Do(func() {
+		testMetrics = metrics.NewMetrics()
+	})
 	authMock := new(MockAuthService)
 	pvzMock := new(MockPVZService)
-	var handler = handler.NewHandler(log, authMock, pvzMock)
+	var handler = handler.NewHandler(log, testMetrics, authMock, pvzMock)
 	return authMock, pvzMock, handler
 }
 

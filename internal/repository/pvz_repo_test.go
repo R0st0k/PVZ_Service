@@ -78,6 +78,11 @@ func (m *MockPVZRepository) GetPVZs(ctx context.Context, from, to time.Time, lim
 	return args.Get(0).([]models.PVZ), args.Error(1)
 }
 
+func (m *MockPVZRepository) GetPVZsWithNoFilter(ctx context.Context) ([]models.PVZ, error) {
+	args := m.Called(ctx)
+	return args.Get(0).([]models.PVZ), args.Error(1)
+}
+
 func (m *MockPVZRepository) GetReceptionsForPVZs(ctx context.Context, pvzIDs []uuid.UUID, from, to time.Time) ([]models.Reception, error) {
 	args := m.Called(ctx, pvzIDs, from, to)
 	return args.Get(0).([]models.Reception), args.Error(1)
@@ -204,10 +209,15 @@ func TestPVZRepositoryInterface(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
-	mockRepo.On("GetCityID", ctx, "Moscow").Return(1, nil).Once()
-	cityID, err := mockRepo.GetCityID(ctx, "Moscow")
+	mockRepo.On("GetCityID", ctx, "Москва").Return(1, nil).Once()
+	cityID, err := mockRepo.GetCityID(ctx, "Москва")
 	assert.NoError(t, err)
 	assert.Equal(t, 1, cityID)
+
+	mockRepo.On("GetPVZsWithNoFilter", ctx).Return(testPVZs, nil).Once()
+	pvzsNoFilter, err := mockRepo.GetPVZsWithNoFilter(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, testPVZs, pvzsNoFilter)
 
 	// Test Reception operations
 	mockRepo.On("InsertReception", ctx, testReception).Return(nil).Once()

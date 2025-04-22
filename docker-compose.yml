@@ -7,6 +7,8 @@ services:
     container_name: pvz_service
     ports:
       - "8080:8080"
+      - "3000:3000"
+      - "9000:9000"
     environment:
       - CONFIG_PATH=/config/prod.yaml
     depends_on:

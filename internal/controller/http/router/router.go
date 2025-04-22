@@ -7,6 +7,7 @@ import (
 	api "pvz-service/api/generated"
 	"pvz-service/internal/controller/http/handler"
 	httpMiddleware "pvz-service/internal/controller/http/middleware"
+	"pvz-service/internal/metrics"
 	"pvz-service/internal/service"
 
 	"github.com/go-chi/chi/v5"
@@ -15,10 +16,11 @@ import (
 
 func Setup(
 	log *slog.Logger,
+	metrics *metrics.Metrics,
 	authService service.AuthService,
 	pvzService service.PVZService,
 ) http.Handler {
-	h := handler.NewHandler(log, &authService, &pvzService)
+	h := handler.NewHandler(log, metrics, &authService, &pvzService)
 
 	router := chi.NewRouter()
 
@@ -27,6 +29,7 @@ func Setup(
 	router.Use(httpMiddleware.LoggerMiddleware(log))
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
+	router.Use(metrics.Middleware)
 
 	// Public routes
 	router.Group(func(r chi.Router) {

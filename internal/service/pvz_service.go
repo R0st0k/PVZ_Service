@@ -30,6 +30,7 @@ type PVZServiceInterface interface {
 	DeleteLastProduct(ctx context.Context, pvzID uuid.UUID) error
 	CloseReception(ctx context.Context, pvzID uuid.UUID) (*models.Reception, error)
 	GetPVZsWithReceptions(ctx context.Context, from, to time.Time, page, limit int) ([]models.PVZInfo, error)
+	GetPVZs(ctx context.Context) ([]models.PVZ, error)
 }
 
 func (s *PVZService) CreatePVZ(ctx context.Context, pvz *models.PVZ) (*models.PVZ, error) {
@@ -288,4 +289,17 @@ func (s *PVZService) buildPVZResponse(pvzs []models.PVZ, receptions []models.Rec
 	}
 
 	return response
+}
+
+func (s *PVZService) GetPVZs(ctx context.Context) ([]models.PVZ, error) {
+	const op = "service.pvz_service.GetPVZs"
+
+	// Simple repository calls
+	pvzs, err := s.repo.GetPVZsWithNoFilter(ctx)
+	if err != nil {
+		s.log.Error(fmt.Sprintf("%s: failed to get PVZs", op), sl.Err(err))
+		return nil, fmt.Errorf("failed to get PVZs: %w", err)
+	}
+
+	return pvzs, nil
 }

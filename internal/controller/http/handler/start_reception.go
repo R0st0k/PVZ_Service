@@ -82,6 +82,7 @@ func (h *Handler) StartReception() http.HandlerFunc {
 			return
 		}
 
+		h.metrics.ReceptionsCreated.Inc()
 		w.WriteHeader(http.StatusCreated)
 		render.JSON(w, r, reception)
 	}

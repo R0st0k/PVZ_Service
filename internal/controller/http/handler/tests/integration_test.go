@@ -8,6 +8,7 @@ import (
 	api "pvz-service/api/generated"
 	"pvz-service/internal/config"
 	"pvz-service/internal/controller/http/handler"
+	"pvz-service/internal/metrics"
 	"pvz-service/internal/models"
 	"pvz-service/internal/repository"
 	"pvz-service/internal/repository/postgres"
@@ -59,11 +60,14 @@ func TestFullPVZWorkflow(t *testing.T) {
 	defer pvzRepo.CloseConnection()
 
 	// Create services
+	metricsOnce.Do(func() {
+		testMetrics = metrics.NewMetrics()
+	})
 	authService := service.NewAuthService(authRepo, cfg, log)
 	pvzService := service.NewPVZService(pvzRepo, log)
 
 	// Create handler
-	h := handler.NewHandler(log, authService, pvzService)
+	h := handler.NewHandler(log, testMetrics, authService, pvzService)
 
 	// Test data
 	pvzID := uuid.New()

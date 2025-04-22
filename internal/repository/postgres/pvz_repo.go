@@ -149,6 +149,28 @@ func (p *Postgres) GetPVZs(ctx context.Context, from, to time.Time, limit, offse
 	return pvzs, rows.Err()
 }
 
+func (p *Postgres) GetPVZsWithNoFilter(ctx context.Context) ([]models.PVZ, error) {
+	rows, err := p.db.QueryContext(ctx,
+		`SELECT p.id, p.registration_date, p.city_id, c.name
+		 FROM pvz p
+		 JOIN cities c ON p.city_id = c.id
+		 ORDER BY p.registration_date DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var pvzs []models.PVZ
+	for rows.Next() {
+		var pvz models.PVZ
+		if err := rows.Scan(&pvz.ID, &pvz.RegistrationDate, &pvz.CityID, &pvz.CityName); err != nil {
+			return nil, err
+		}
+		pvzs = append(pvzs, pvz)
+	}
+	return pvzs, rows.Err()
+}
+
 func (p *Postgres) GetReceptionsForPVZs(ctx context.Context, pvzIDs []uuid.UUID, from, to time.Time) ([]models.Reception, error) {
 	rows, err := p.db.QueryContext(ctx,
 		`SELECT id, date_time, pvz_id, status

@@ -8,8 +8,6 @@ grpc:
   is_able: true
   host: "0.0.0.0"
   port: "3000"
-  timeout: "4s"
-  idle_timeout: "30s"
 
 prometheus:
   is_able: true

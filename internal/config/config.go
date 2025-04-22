@@ -25,11 +25,9 @@ type HTTP struct {
 }
 
 type GRPC struct {
-	IsAble      bool          `yaml:"is_able" env:"GRPC_IS_ABLE" env-default:"true"`
-	Host        string        `yaml:"host" env:"GRPC_HOST" env-default:"0.0.0.0"`
-	Port        string        `yaml:"port" env:"GRPC_PORT" env-default:"3000"`
-	Timeout     time.Duration `yaml:"timeout" env:"GRPC_TIMEOUT" env-default:"4s"`
-	IdleTimeout time.Duration `yaml:"idle_timeout" env:"GRPC_IDLE_TIMEOUT" env-default:"30s"`
+	IsAble bool   `yaml:"is_able" env:"GRPC_IS_ABLE" env-default:"true"`
+	Host   string `yaml:"host" env:"GRPC_HOST" env-default:"0.0.0.0"`
+	Port   string `yaml:"port" env:"GRPC_PORT" env-default:"3000"`
 }
 
 type Prometheus struct {

@@ -157,3 +157,63 @@ func TestGetPVZs(t *testing.T) {
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
+
+func TestGetPVZsWithNoFilter(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	repo := &Postgres{db: db}
+
+	now := time.Now()
+	pvzID := uuid.New()
+	cityName := "Москва"
+
+	t.Run("SuccessWithResults", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "registration_date", "city_id", "name"}).
+			AddRow(pvzID, now, 1, cityName).
+			AddRow(uuid.New(), now.Add(-time.Hour), 2, "Санкт-Петербург")
+
+		mock.ExpectQuery(`SELECT p.id, p.registration_date, p.city_id, c.name
+		 FROM pvz p
+		 JOIN cities c ON p.city_id = c.id
+		 ORDER BY p.registration_date DESC`).
+			WillReturnRows(rows)
+
+		pvzs, err := repo.GetPVZsWithNoFilter(context.Background())
+		assert.NoError(t, err)
+		assert.Len(t, pvzs, 2)
+		assert.Equal(t, []models.PVZ{
+			{
+				ID:               pvzID,
+				RegistrationDate: now,
+				CityID:           1,
+				CityName:         cityName,
+			},
+			{
+				ID:               pvzs[1].ID, // Проверяем только что ID установлен
+				RegistrationDate: now.Add(-time.Hour),
+				CityID:           2,
+				CityName:         "Санкт-Петербург",
+			},
+		}, pvzs)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("SuccessNoResults", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "registration_date", "city_id", "name"})
+
+		mock.ExpectQuery(`SELECT p.id, p.registration_date, p.city_id, c.name
+		 FROM pvz p
+		 JOIN cities c ON p.city_id = c.id
+		 ORDER BY p.registration_date DESC`).
+			WillReturnRows(rows)
+
+		pvzs, err := repo.GetPVZsWithNoFilter(context.Background())
+		assert.NoError(t, err)
+		assert.Empty(t, pvzs)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+}

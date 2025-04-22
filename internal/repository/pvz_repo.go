@@ -18,6 +18,7 @@ type PVZRepository interface {
 	InsertPVZ(ctx context.Context, pvz *models.PVZ) error
 	CheckPVZ(ctx context.Context, pvzID uuid.UUID) (bool, error)
 	GetCityID(ctx context.Context, cityName string) (int, error)
+	GetPVZsWithNoFilter(ctx context.Context) ([]models.PVZ, error)
 
 	// Reception operations
 	InsertReception(ctx context.Context, reception *models.Reception) error
